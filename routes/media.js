@@ -1,9 +1,11 @@
 const express = require('express');
 const store = require('../middlewares/multer')
-const { MediaController } = require('../controllers/media');
+const { AddMedia, RemoveMedia } = require('../controllers/media');
 
 const router = express.Router();
-router.post('/podcast', store.array('images'), MediaController);
+router.post('/uploads', store.array('images'), AddMedia);
+router.delete('/uploads:filename', RemoveMedia);
+
 
 
 module.exports = router;

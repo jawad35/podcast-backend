@@ -1,13 +1,13 @@
 const fs = require('fs');
-const media = require('../models/media')
+const Media = require('../models/media');
+const path = require('path');
 exports.home = async (req, res) => {
     const all_images = await UploadModel.find()
     res.render('main', { images : all_images });
 }
 
-exports.MediaController = (req, res , next) => {
+exports.AddMedia = (req, res , next) => {
     const files = req.files;
-
     if(!files){
         const error = new Error('Please choose files');
         error.httpStatusCode = 400;
@@ -22,15 +22,15 @@ exports.MediaController = (req, res , next) => {
     })
 
     let result = imgArray.map((src, index) => {
-
+        const ext = files[index].originalname.substr(files[index].originalname.lastIndexOf('.'));
         // create object to store data in the collection
         let finalImg = {
-            filename : files[index].originalname,
+        filename : `${files[index].originalname}-${req.query.id}${ext}`,
             contentType : files[index].mimetype,
             imageBase64 : src
         }
 
-        let newUpload = new media(finalImg);
+        let newUpload = new Media(finalImg);
 
         return newUpload
                 .save()
@@ -56,3 +56,27 @@ exports.MediaController = (req, res , next) => {
             res.json(err);
         })
 }
+
+exports.RemoveMedia = async (req, res) => {
+    try {
+      const filename = 'reels podcast.mp4-1703182279411.mp4';
+      // Remove the file from the upload folder
+      // Remove the image record from MongoDB
+    //   const fileExists = await fs.access(`./uploads/${filename}`).then(() => true).catch(() => false);
+      
+      console.log(fs.existsSync(`./uploads/${filename}`))
+
+      return
+      const deletedImage = await Media.findOneAndRemove({ filename });
+      fs.unlinkSync(`./uploads/${filename}`);
+  
+      if (!deletedImage) {
+        return res.status(404).json({ error: 'Image not found' });
+      }
+  
+      res.status(200).json({ message: 'Image deleted successfully' });
+    } catch (error) {
+      console.error(error);
+      res.status(500).send('Internal Server Error');
+    }
+  };
