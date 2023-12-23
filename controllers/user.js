@@ -4,7 +4,7 @@ const sharp = require('sharp');
 const VerificationToken = require('../models/verificationToken');
 const generateOTP = require('../utils/generateOTP');
 const sendMail = require('../utils/sendMails');
-const { sendError } = require('../helper/ErrorMessage');
+const { sendError, sendErrorRemoveFile } = require('../helper/ErrorMessage');
 const { isValidObjectId } = require('mongoose');
 const emailTemplate = require('../utils/emailTemplate');
 const VerifiefSuccessEmailTemplate = require('../utils/verifiefSuccessEmailTemplate');
@@ -12,19 +12,28 @@ const { CreateRandomBytes } = require('../helper/createRandombytes');
 const ResetpassEmailTemplate = require('../utils/resetpassEmailTemplate');
 const resetpassToken = require('../models/resetpassToken');
 const ResetPassSuccessTemplate = require('../utils/resetPassSuccess');
+const { RemoveFiles } = require('../helper/removefiles');
 // const cloudinary = require('../helper/imageUpload');
 exports.createUser = async (req, res) => {
+  const  avatar  = req.file;
+
+  const ext = avatar.originalname.substr(avatar.originalname.lastIndexOf('.'));
+  const filename = `${avatar.originalname.replace(/\s/g, '')}-${req.query.randomId}${ext}`
   const { fullname, email, password } = req.body;
+  if (!fullname || !email || !password || !avatar) return sendErrorRemoveFile(res, "Please Provide all inputs!", filename)
   const isNewUser = await User.isThisEmailInUse(email);
-  if (!isNewUser)
+  if (!isNewUser) {
+    RemoveFiles(filename)
     return res.json({
       success: false,
       message: 'This email is already in use, try sign-in',
     });
+  }
   const user = await User({
     fullname,
     email,
     password,
+    avatar:filename
   });
   const OTP = generateOTP()
   const verificationToken = new VerificationToken({
@@ -33,15 +42,14 @@ exports.createUser = async (req, res) => {
   })
   await verificationToken.save();
   await user.save();
-  sendMail(OTP, email, emailTemplate, 'Verify your email account')
+  // sendMail(OTP, email, emailTemplate, 'Verify your email account')
   res.json({ success: true, user });
 };
 
 exports.userSignIn = async (req, res) => {
   const { email, password } = req.body;
-
+  console.log(req.body)
   const user = await User.findOne({ email });
-
   if (!user)
     return res.json({
       success: false,
@@ -85,6 +93,7 @@ exports.userSignIn = async (req, res) => {
 
 exports.verifyEmail = async (req, res) => {
   const { userid, otp } = req.body
+  console.log(req.body)
   if (!userid || !otp.trim()) return sendError(res, "Invalid Request, missing parameters")
   if (!isValidObjectId(userid)) return sendError(res, "Invalid user id!")
   const user = await User.findById(userid)
@@ -145,7 +154,56 @@ exports.resetPassword = async (req, res) => {
 
 }
 
+exports.uploadPodcast = async (req, res) => {
+  const image = req.files['avatar'][0];
+  const videos = req.files['videos[]'];
+  const { description, category  } = req.body
+  if (!image) {
+      return sendErrorRemoveFile(res, "Please choose image")
+  }
+  if (!videos) {
+      return sendErrorRemoveFile(res, "Please choose video")
+  }
+  let videoArray = []
+  videos.map(video => videoArray.push(video.filename))
+  const podcast = {
+    description:description,
+    image:image.filename,
+    videos:videoArray,
+    category:category
+  }
+  console.log(podcast, 'array')
+    await User.findByIdAndUpdate(
+   { _id:'658716afe7009f4710f70ab3'},
+    { podcast: podcast },
+    { new: true }
+  );
+  return res.json({ success: true, message: 'Podcast Reset successfully' })
 
+  
+
+  const ext = file1.originalname.substr(file1.originalname.lastIndexOf('.'));
+  // create object to store data in the collection
+  let finalImg = {
+      filename: `${file1.originalname}-${req.query.id}${ext}`,
+  }
+
+  let newUpload = new Media(finalImg);
+
+  return newUpload
+      .save()
+      .then(() => {
+          return { msg: `${file1.originalname} Uploaded Successfully...!` }
+      })
+      .catch(error => {
+          if (error) {
+              if (error.name === 'MongoError' && error.code === 11000) {
+                  return Promise.reject({ error: `Duplicate ${file1.originalname}. File Already exists! ` });
+              }
+              return Promise.reject({ error: error.message || `Cannot Upload ${file1.originalname} Something Missing!` })
+          }
+      })
+}
 // exports.signOut = async (req, res) => {
 //   if (req.headers && req.headers.authorization) {
 //     const token = req.headers.authorization.split(' ')[1];

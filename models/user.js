@@ -20,7 +20,20 @@ const userSchema = new mongoose.Schema({
     type:Boolean,
     default:false,
     required:true
-  }
+  },
+  subscription:{
+    type:Boolean,
+    default:false,
+    required:true
+  },
+  podcast:{
+    description:'',
+    image:'',
+    videos:[],
+    category:''
+  },
+  followers:[],
+  following:[]
 });
 
 userSchema.pre('save', function (next) {

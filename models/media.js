@@ -6,14 +6,18 @@ const mediasSchema = new mongoose.Schema({
         unique : true,
         required: true
     },
-    contentType : {
-        type: String,
-        required : true
-    },
-    imageBase64 : {
+    description : {
         type : String,
         required: true
-    }
+    },
+    image:String,
+    videos:[],
+    createdAt: {
+        type: Date,
+        default: Date.now
+      },
+    query:String,
+
 })
 
 module.exports = mongoose.model('Media', mediasSchema);
