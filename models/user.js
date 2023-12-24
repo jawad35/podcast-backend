@@ -32,6 +32,11 @@ const userSchema = new mongoose.Schema({
     videos:[],
     category:''
   },
+  shorts:{
+    description:'',
+    videos:[],
+    category:''
+  },
   followers:[],
   following:[]
 });

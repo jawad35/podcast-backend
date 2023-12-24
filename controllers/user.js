@@ -13,6 +13,8 @@ const ResetpassEmailTemplate = require('../utils/resetpassEmailTemplate');
 const resetpassToken = require('../models/resetpassToken');
 const ResetPassSuccessTemplate = require('../utils/resetPassSuccess');
 const { RemoveFiles } = require('../helper/removefiles');
+const { removeItemByName } = require('../helper/ItemRemoveFromArray');
+const { removeDataFromUploads } = require('../helper/removeDataFromUploads');
 // const cloudinary = require('../helper/imageUpload');
 exports.createUser = async (req, res) => {
   const  avatar  = req.file;
@@ -172,7 +174,6 @@ exports.uploadPodcast = async (req, res) => {
     videos:videoArray,
     category:category
   }
-  console.log(podcast, 'array')
     await User.findByIdAndUpdate(
    { _id:'658716afe7009f4710f70ab3'},
     { podcast: podcast },
@@ -204,6 +205,139 @@ exports.uploadPodcast = async (req, res) => {
           }
       })
 }
+
+
+exports.updatePodcast = async (req, res) => {
+  const id = "658716afe7009f4710f70ab3"
+  const description = "updated des"
+  const category = "updated cate"
+  const podcast = {
+    description,
+    category
+  }
+ 
+}
+
+exports.deletePodcastVideo = async (req, res) => {
+  const id = "658716afe7009f4710f70ab3"
+  const filename = 'Recorder_18122023_195130.mp4-b9436e45-9ca3-499a-b2be-7a876fac5753.mp4'
+  const user = await User.findById(id)
+  const podcastVideos = user.podcast.videos
+  removeItemByName(podcastVideos, filename)
+  const isRemoved = removeDataFromUploads(filename) 
+  if (isRemoved) {
+    await User.findByIdAndUpdate(
+      { _id:'658716afe7009f4710f70ab3'},
+      {
+        $set: {
+          'podcast.videos': podcastVideos, // Update the nested property
+        },
+      },
+       { new: true }
+     );
+  }
+  
+  return res.json({ success: true, message: 'Video deleted successfully!' })
+}
+
+exports.updatePodcastImage = async (req, res) => {
+  const  avatar  = req.file;
+  const {oldimage} = req.body
+  const ext = avatar.originalname.substr(avatar.originalname.lastIndexOf('.'));
+  const filename = `${avatar.originalname.replace(/\s/g, '')}-${req.query.randomId}${ext}`
+  const isRemoved = removeDataFromUploads(oldimage) 
+  if (isRemoved) {
+    await User.findByIdAndUpdate(
+      { _id:'658716afe7009f4710f70ab3'},
+      {
+        $set: {
+          'podcast.image': filename, // Update the nested property
+        },
+      },
+       { new: true }
+     );
+  }
+  
+  return res.json({ success: true, message: 'Image updated successfully!' })
+}
+
+exports.updatePodcastDescription = async (req, res) => {
+  const {description} = req.body
+  console.log(description)
+  return
+    await User.findByIdAndUpdate(
+      { _id:'658716afe7009f4710f70ab3'},
+      {
+        $set: {
+          'podcast.description': description, // Update the nested property
+        },
+      },
+       { new: true }
+     );
+  return res.json({ success: true, message: 'Description updated successfully!' })
+}
+
+exports.updatePodcastCategory = async (req, res) => {
+  const {category} = req.body
+  console.log(category)
+  return
+    await User.findByIdAndUpdate(
+      { _id:'658716afe7009f4710f70ab3'},
+      {
+        $set: {
+          'podcast.category': category, // Update the nested property
+        },
+      },
+       { new: true }
+     );
+  return res.json({ success: true, message: 'Description updated successfully!' })
+}
+
+exports.uploadShort = async (req, res) => {
+  const short = req.files['short'];
+  const { description, category  } = req.body
+
+  if (!short) {
+      return sendErrorRemoveFile(res, "Please choose video")
+  }
+  let videoArray = []
+  const podcast = {
+    description:description,
+    videos:videoArray,
+    category:category
+  }
+    await User.findByIdAndUpdate(
+   { _id:'658716afe7009f4710f70ab3'},
+    { podcast: podcast },
+    { new: true }
+  );
+  return res.json({ success: true, message: 'Podcast Reset successfully' })
+
+  
+
+  const ext = file1.originalname.substr(file1.originalname.lastIndexOf('.'));
+  // create object to store data in the collection
+  let finalImg = {
+      filename: `${file1.originalname}-${req.query.id}${ext}`,
+  }
+
+  let newUpload = new Media(finalImg);
+
+  return newUpload
+      .save()
+      .then(() => {
+          return { msg: `${file1.originalname} Uploaded Successfully...!` }
+      })
+      .catch(error => {
+          if (error) {
+              if (error.name === 'MongoError' && error.code === 11000) {
+                  return Promise.reject({ error: `Duplicate ${file1.originalname}. File Already exists! ` });
+              }
+              return Promise.reject({ error: error.message || `Cannot Upload ${file1.originalname} Something Missing!` })
+          }
+      })
+}
+
 // exports.signOut = async (req, res) => {
 //   if (req.headers && req.headers.authorization) {
 //     const token = req.headers.authorization.split(' ')[1];

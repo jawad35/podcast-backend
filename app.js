@@ -2,7 +2,8 @@ const express = require('express');
 const app = express();
 require('dotenv').config();
 app.use(express.json());
-// app.use('/uploads', express.static('uploads'));
+// app.use(express.urlencoded({ extended: true }));
+app.use('/uploads', express.static('uploads'));
 const userRoute = require('./routes/user')
 const mediaRoute = require('./routes/media')
 const Port = process.env.PORT || 8000
