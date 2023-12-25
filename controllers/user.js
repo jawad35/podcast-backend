@@ -44,26 +44,19 @@ exports.createUser = async (req, res) => {
   })
   await verificationToken.save();
   await user.save();
-  // sendMail(OTP, email, emailTemplate, 'Verify your email account')
+  sendMail(OTP, email, emailTemplate, 'Verify your email account')
   res.json({ success: true, user });
 };
 
 exports.userSignIn = async (req, res) => {
   const { email, password } = req.body;
-  console.log(req.body)
+  console.log(req.boy)
+  return
   const user = await User.findOne({ email });
-  if (!user)
-    return res.json({
-      success: false,
-      message: 'user not found, with the given email!',
-    });
-
+  if (!user) return sendError(res, 'user not found, with the given email!')
   const isMatch = await user.comparePassword(password);
-  if (!isMatch)
-    return res.json({
-      success: false,
-      message: 'email / password does not match!',
-    });
+  if (!isMatch) return sendError(res, 'email / Password does not match!')
+  if (!user?.verified) return sendError(res, 'Please verify the email first!')
 
   const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
     expiresIn: '1d',
@@ -84,13 +77,7 @@ exports.userSignIn = async (req, res) => {
     tokens: [...oldTokens, { token, signedAt: Date.now().toString() }],
   });
 
-  const userInfo = {
-    fullname: user.fullname,
-    email: user.email,
-    avatar: user.avatar ? user.avatar : '',
-  };
-
-  res.json({ success: true, user: userInfo, token });
+  res.json({ success: true, user: user, token });
 };
 
 exports.verifyEmail = async (req, res) => {
@@ -100,7 +87,7 @@ exports.verifyEmail = async (req, res) => {
   if (!isValidObjectId(userid)) return sendError(res, "Invalid user id!")
   const user = await User.findById(userid)
   if (!user) return sendError(res, "Sorry, user not found!")
-  if (user.verified) return sendError(res, "This account is already verified!")
+  if (user.verified) return sendError(res, "This account is already verified, Please try to login!")
   const token = await VerificationToken.findOne({ owner: user._id })
   if (!token) return sendError(res, "Sorry, user not found!")
   const isMatched = await token.compareToken(otp)
@@ -117,7 +104,7 @@ exports.verifyEmail = async (req, res) => {
 
 
 exports.forgetPassword = async (req, res) => {
-  const { email } = req.body
+  const { email, otp } = req.body
   if (!email) return sendError(res, "Please provide a valid email")
   const user = await User.findOne({ email })
   if (!user) return sendError(res, "User not found, invalid request!")
@@ -133,23 +120,21 @@ exports.forgetPassword = async (req, res) => {
   //   { token: generatedToken },
   //   { new: true }
   // );
-  const url = `http://localhost:3000/reset-password?token=${generatedToken}&id=${user._id}`
-  sendMail(url, user.email, ResetpassEmailTemplate, "Reset Email")
-  res.json({ success: true, message: 'Password reset link is sent to your email.' })
+  sendMail(otp, user.email, ResetpassEmailTemplate, "Reset Email")
+  res.json({ success: true, message: 'Password reset verification code is sent to your email.', id: user._id })
 
 }
 
 
 exports.resetPassword = async (req, res) => {
-  const { password } = req.body
-  const user = await User.findById(req.user._id)
+  const { password, userid } = req.body
+  const user = await User.findById(userid)
   if (!user) return sendError(res, "User not found, invalid request!")
   const isSamePass = await user.comparePassword(password)
   if (isSamePass) return sendError(res, "New password must be different!")
   // if (password.trim().length < 8 || password.trim().length > 20 ) return sendError(res, "Password must be 8 to 20 characters long!")
   user.password = password.trim()
   user.save()
-
   await resetpassToken.findOneAndDelete({ owner: user._id })
   sendMail(null, user.email, ResetPassSuccessTemplate, "Password Reset successfully")
   res.json({ success: true, message: 'Password Reset successfully' })
@@ -311,7 +296,7 @@ exports.uploadShort = async (req, res) => {
     { podcast: podcast },
     { new: true }
   );
-  return res.json({ success: true, message: 'Podcast Reset successfully' })
+  return res.json({ success: true, message: 'Podcast Created successfully' })
 
   
 

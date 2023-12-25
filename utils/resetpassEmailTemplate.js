@@ -58,7 +58,7 @@ const emailTemplate = (code) => {
         <p>Thank you for registering. To complete your registration, please enter the code to verify your email address:</p>
     
         <div style="text-align: center;">
-        <a href=${code}  class="verification-button">Reset Password</a>
+        ${code}
         </div>
     
         <div class="footer">
