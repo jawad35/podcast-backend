@@ -17,7 +17,7 @@ const { removeItemByName } = require('../helper/ItemRemoveFromArray');
 const { removeDataFromUploads } = require('../helper/removeDataFromUploads');
 // const cloudinary = require('../helper/imageUpload');
 exports.createUser = async (req, res) => {
-  const  avatar  = req.file;
+  const avatar = req.file;
 
   const ext = avatar.originalname.substr(avatar.originalname.lastIndexOf('.'));
   const filename = `${avatar.originalname.replace(/\s/g, '')}-${req.query.randomId}${ext}`
@@ -35,7 +35,7 @@ exports.createUser = async (req, res) => {
     fullname,
     email,
     password,
-    avatar:filename
+    avatar: filename
   });
   const OTP = generateOTP()
   const verificationToken = new VerificationToken({
@@ -50,8 +50,6 @@ exports.createUser = async (req, res) => {
 
 exports.userSignIn = async (req, res) => {
   const { email, password } = req.body;
-  console.log(req.boy)
-  return
   const user = await User.findOne({ email });
   if (!user) return sendError(res, 'user not found, with the given email!')
   const isMatch = await user.comparePassword(password);
@@ -82,7 +80,6 @@ exports.userSignIn = async (req, res) => {
 
 exports.verifyEmail = async (req, res) => {
   const { userid, otp } = req.body
-  console.log(req.body)
   if (!userid || !otp.trim()) return sendError(res, "Invalid Request, missing parameters")
   if (!isValidObjectId(userid)) return sendError(res, "Invalid user id!")
   const user = await User.findById(userid)
@@ -144,183 +141,195 @@ exports.resetPassword = async (req, res) => {
 exports.uploadPodcast = async (req, res) => {
   const image = req.files['avatar'][0];
   const videos = req.files['videos[]'];
-  const { description, category  } = req.body
+  const { description, category } = req.body
   if (!image) {
-      return sendErrorRemoveFile(res, "Please choose image")
+    return sendErrorRemoveFile(res, "Please choose image")
   }
   if (!videos) {
-      return sendErrorRemoveFile(res, "Please choose video")
+    return sendErrorRemoveFile(res, "Please choose video")
   }
   let videoArray = []
   videos.map(video => videoArray.push(video.filename))
   const podcast = {
-    description:description,
-    image:image.filename,
-    videos:videoArray,
-    category:category
+    description: description,
+    image: image.filename,
+    videos: videoArray,
+    category: category
   }
-    await User.findByIdAndUpdate(
-   { _id:'658716afe7009f4710f70ab3'},
+  await User.findByIdAndUpdate(
+    { _id: '658716afe7009f4710f70ab3' },
     { podcast: podcast },
     { new: true }
   );
   return res.json({ success: true, message: 'Podcast Reset successfully' })
-
-  
-
-  const ext = file1.originalname.substr(file1.originalname.lastIndexOf('.'));
-  // create object to store data in the collection
-  let finalImg = {
-      filename: `${file1.originalname}-${req.query.id}${ext}`,
-  }
-
-  let newUpload = new Media(finalImg);
-
-  return newUpload
-      .save()
-      .then(() => {
-          return { msg: `${file1.originalname} Uploaded Successfully...!` }
-      })
-      .catch(error => {
-          if (error) {
-              if (error.name === 'MongoError' && error.code === 11000) {
-                  return Promise.reject({ error: `Duplicate ${file1.originalname}. File Already exists! ` });
-              }
-              return Promise.reject({ error: error.message || `Cannot Upload ${file1.originalname} Something Missing!` })
-          }
-      })
 }
 
 
-exports.updatePodcast = async (req, res) => {
-  const id = "658716afe7009f4710f70ab3"
-  const description = "updated des"
-  const category = "updated cate"
-  const podcast = {
-    description,
-    category
+exports.updatePodcastVideos = async (req, res) => {
+  const videos = req.files['videos[]'];
+  const {userid} = req.body
+  if (!videos) {
+    return sendErrorRemoveFile(res, "Please choose video")
   }
- 
+  const user = await User.findById(userid)
+  const filenameArray = []
+  videos.map((video) => filenameArray.push(video.filename))
+  const podcastOldVideosArray = user.podcast.videos
+  const AllVideos = filenameArray.concat(podcastOldVideosArray)
+  const userData = await User.findByIdAndUpdate(
+    { _id: userid },
+    {
+      $set: {
+        'podcast.videos': AllVideos, // Update the nested property
+      },
+    },
+    { new: true }
+  );
+  return res.json({ success: true, message: 'Podcast Videos updated successfully', user:userData })
 }
+
 
 exports.deletePodcastVideo = async (req, res) => {
-  const id = "658716afe7009f4710f70ab3"
-  const filename = 'Recorder_18122023_195130.mp4-b9436e45-9ca3-499a-b2be-7a876fac5753.mp4'
-  const user = await User.findById(id)
+  const {userid, filename} = req.body
+  const user = await User.findById(userid)
   const podcastVideos = user.podcast.videos
   removeItemByName(podcastVideos, filename)
-  const isRemoved = removeDataFromUploads(filename) 
-  if (isRemoved) {
-    await User.findByIdAndUpdate(
-      { _id:'658716afe7009f4710f70ab3'},
+  console.log(podcastVideos)
+  removeDataFromUploads(filename)
+    const userData = await User.findByIdAndUpdate(
+      { _id: userid },
       {
         $set: {
           'podcast.videos': podcastVideos, // Update the nested property
         },
       },
-       { new: true }
-     );
-  }
-  
-  return res.json({ success: true, message: 'Video deleted successfully!' })
+      { new: true }
+    );
+  return res.json({ success: true, message: 'Video deleted successfully!', user:userData })
 }
 
 exports.updatePodcastImage = async (req, res) => {
-  const  avatar  = req.file;
-  const {oldimage} = req.body
+  const avatar = req.file;
+  const { oldimage, userid } = req.body
   const ext = avatar.originalname.substr(avatar.originalname.lastIndexOf('.'));
   const filename = `${avatar.originalname.replace(/\s/g, '')}-${req.query.randomId}${ext}`
-  const isRemoved = removeDataFromUploads(oldimage) 
-  if (isRemoved) {
+  removeDataFromUploads(oldimage)
     await User.findByIdAndUpdate(
-      { _id:'658716afe7009f4710f70ab3'},
+      { _id: userid },
       {
         $set: {
           'podcast.image': filename, // Update the nested property
         },
       },
-       { new: true }
-     );
-  }
-  
+      { new: true }
+    );
   return res.json({ success: true, message: 'Image updated successfully!' })
 }
 
 exports.updatePodcastDescription = async (req, res) => {
-  const {description} = req.body
-  console.log(description)
-  return
-    await User.findByIdAndUpdate(
-      { _id:'658716afe7009f4710f70ab3'},
-      {
-        $set: {
-          'podcast.description': description, // Update the nested property
-        },
+  const { description, userid } = req.body
+  await User.findByIdAndUpdate(
+    { _id: userid },
+    {
+      $set: {
+        'podcast.description': description, // Update the nested property
       },
-       { new: true }
-     );
+    },
+    { new: true }
+  );
   return res.json({ success: true, message: 'Description updated successfully!' })
 }
 
 exports.updatePodcastCategory = async (req, res) => {
-  const {category} = req.body
-  console.log(category)
-  return
-    await User.findByIdAndUpdate(
-      { _id:'658716afe7009f4710f70ab3'},
-      {
-        $set: {
-          'podcast.category': category, // Update the nested property
-        },
+  const { category, userid } = req.body
+  await User.findByIdAndUpdate(
+    { _id: userid },
+    {
+      $set: {
+        'podcast.category': category, // Update the nested property
       },
-       { new: true }
-     );
+    },
+    { new: true }
+  );
   return res.json({ success: true, message: 'Description updated successfully!' })
 }
 
 exports.uploadShort = async (req, res) => {
   const short = req.files['short'];
-  const { description, category  } = req.body
+  const { description, category } = req.body
 
   if (!short) {
-      return sendErrorRemoveFile(res, "Please choose video")
+    return sendErrorRemoveFile(res, "Please choose video")
   }
   let videoArray = []
   const podcast = {
-    description:description,
-    videos:videoArray,
-    category:category
+    description: description,
+    videos: videoArray,
+    category: category
   }
-    await User.findByIdAndUpdate(
-   { _id:'658716afe7009f4710f70ab3'},
+  await User.findByIdAndUpdate(
+    { _id: '658716afe7009f4710f70ab3' },
     { podcast: podcast },
     { new: true }
   );
   return res.json({ success: true, message: 'Podcast Created successfully' })
 
-  
+
 
   const ext = file1.originalname.substr(file1.originalname.lastIndexOf('.'));
   // create object to store data in the collection
   let finalImg = {
-      filename: `${file1.originalname}-${req.query.id}${ext}`,
+    filename: `${file1.originalname}-${req.query.id}${ext}`,
   }
 
   let newUpload = new Media(finalImg);
 
   return newUpload
-      .save()
-      .then(() => {
-          return { msg: `${file1.originalname} Uploaded Successfully...!` }
-      })
-      .catch(error => {
-          if (error) {
-              if (error.name === 'MongoError' && error.code === 11000) {
-                  return Promise.reject({ error: `Duplicate ${file1.originalname}. File Already exists! ` });
-              }
-              return Promise.reject({ error: error.message || `Cannot Upload ${file1.originalname} Something Missing!` })
-          }
-      })
+    .save()
+    .then(() => {
+      return { msg: `${file1.originalname} Uploaded Successfully...!` }
+    })
+    .catch(error => {
+      if (error) {
+        if (error.name === 'MongoError' && error.code === 11000) {
+          return Promise.reject({ error: `Duplicate ${file1.originalname}. File Already exists! ` });
+        }
+        return Promise.reject({ error: error.message || `Cannot Upload ${file1.originalname} Something Missing!` })
+      }
+    })
+}
+
+exports.updateProfileImage = async (req, res) => {
+  const avatar = req.file;
+  const { oldimage, userid } = req.body
+  const ext = avatar.originalname.substr(avatar.originalname.lastIndexOf('.'));
+  const filename = `${avatar.originalname.replace(/\s/g, '')}-${req.query.randomId}${ext}`
+  removeDataFromUploads(oldimage)
+  const user = await User.findByIdAndUpdate(
+    { _id: userid },
+    {
+      $set: {
+        'avatar': filename
+      },
+    },
+    { new: true }
+  );
+  return res.json({ success: true, message: 'Profile Image updated successfully!', user })
+}
+
+exports.updateProfileFullname = async (req, res) => {
+  const { fullname, userid } = req.body
+  const user = await User.findByIdAndUpdate(
+    { _id: userid },
+    {
+      $set: {
+        'fullname': fullname
+      },
+    },
+    { new: true }
+  );
+  return res.json({ success: true, message: 'Profile Fullname updated successfully!', user })
+  // return res.json({ success: false, message: 'Something went wrong!' })
 }
 
 // exports.signOut = async (req, res) => {

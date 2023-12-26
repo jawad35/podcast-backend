@@ -13,7 +13,10 @@ const {
   updatePodcastImage,
   updatePodcastDescription,
   updatePodcastCategory,
-  uploadShort
+  uploadShort,
+  updateProfileImage,
+  updateProfileFullname,
+  updatePodcastVideos
 } = require('../controllers/user');
 const {
   userVlidation, validateUserSignIn,
@@ -29,8 +32,12 @@ router.post('/create', multer.single('avatar'), createUser);
 router.post('/verify-email', verifyEmail);
 router.post('/forget-password', forgetPassword);
 router.post('/reset-password', resetPassword);
+router.post('/profile-image-update', multer.single('avatar'), updateProfileImage);
+router.post('/profile-fullname-update', updateProfileFullname);
+
 // router.post('/reset-password', IsResetPassTokenValid, resetPassword);
 router.post('/upload-podcast', store.fields([{ name: 'avatar', maxCount: 1 }, { name: 'videos[]'}]), uploadPodcast);
+router.post('/upload-podcast-videos', store.fields([{ name: 'videos[]'}]), updatePodcastVideos);
 router.post('/pvideo-delete', deletePodcastVideo);
 router.post('/pimage-update', multer.single('avatar'), updatePodcastImage);
 router.post('/pdesc-update', updatePodcastDescription);
