@@ -35,10 +35,7 @@ const userSchema = new mongoose.Schema({
   shorts:[],
   followers:[],
   following:[],
-  verified:{
-    type:String,
-    default:'user'
-  }
+  role:'user'
 });
 
 userSchema.pre('save', function (next) {
