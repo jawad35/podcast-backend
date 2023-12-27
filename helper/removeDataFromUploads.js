@@ -3,7 +3,7 @@ exports.removeDataFromUploads = (filename) => {
 const filePath = `./uploads/${filename}`;
 
 try {
-  fs?.unlinkSync(filePath);
+  fs.unlinkSync(filePath);
   console.log(`File ${filename} was successfully deleted`);
   return true
 } catch (err) {

@@ -56,7 +56,7 @@ exports.userSignIn = async (req, res) => {
   if (!user) return sendError(res, 'user not found, with the given email!')
   const isMatch = await user.comparePassword(password);
   if (!isMatch) return sendError(res, 'email / Password does not match!')
-  if (!user?.verified) return sendError(res, 'Please verify the email first!')
+  if (!user.verified) return sendError(res, 'Please verify the email first!')
 
   const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
     expiresIn: '1d',
