@@ -352,7 +352,7 @@ exports.uploadShortVideos = async (req, res) => {
     userid,
     caption,
     category,
-    video:video?.filename
+    video:video.filename
   };
   const result = await Shorts.updateOne(
     { /* Your query to identify the document to update */ },
