@@ -158,12 +158,12 @@ exports.uploadPodcast = async (req, res) => {
     videos: videoArray,
     category: category
   }
-  await User.findByIdAndUpdate(
+  const user = await User.findByIdAndUpdate(
     { _id: userid },
     { podcast: podcast },
     { new: true }
   );
-  return res.json({ success: true, message: 'Podcast Reset successfully' })
+  return res.json({ success: true, message: 'Podcast created successfully', user })
 }
 
 
