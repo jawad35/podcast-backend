@@ -143,7 +143,7 @@ exports.resetPassword = async (req, res) => {
 exports.uploadPodcast = async (req, res) => {
   const image = req.files['avatar'][0];
   const videos = req.files['videos[]'];
-  const { description, category } = req.body
+  const { description, category, userid } = req.body
   if (!image) {
     return sendErrorRemoveFile(res, "Please choose image")
   }
@@ -159,7 +159,7 @@ exports.uploadPodcast = async (req, res) => {
     category: category
   }
   await User.findByIdAndUpdate(
-    { _id: '658716afe7009f4710f70ab3' },
+    { _id: userid },
     { podcast: podcast },
     { new: true }
   );
