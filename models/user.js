@@ -34,8 +34,7 @@ const userSchema = new mongoose.Schema({
   },
   shorts:[],
   followers:[],
-  following:[],
-  role:'user'
+  following:[]
 });
 
 userSchema.pre('save', function (next) {
