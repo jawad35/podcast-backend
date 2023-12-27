@@ -32,13 +32,13 @@ const userSchema = new mongoose.Schema({
     videos:[],
     category:''
   },
-  shorts:{
-    description:'',
-    videos:[],
-    category:''
-  },
+  shorts:[],
   followers:[],
-  following:[]
+  following:[],
+  verified:{
+    type:String,
+    default:'user'
+  }
 });
 
 userSchema.pre('save', function (next) {

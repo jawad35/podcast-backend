@@ -1,5 +1,5 @@
 const fs = require('fs');
-const Media = require('../models/media');
+const Media = require('../models/shorts');
 const path = require('path');
 const { sendErrorRemoveFile } = require('../helper/ErrorMessage');
 exports.home = async (req, res) => {

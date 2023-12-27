@@ -1,5 +1,7 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
+const Shorts = require('../models/shorts');
+
 const sharp = require('sharp');
 const VerificationToken = require('../models/verificationToken');
 const generateOTP = require('../utils/generateOTP');
@@ -331,6 +333,69 @@ exports.updateProfileFullname = async (req, res) => {
   return res.json({ success: true, message: 'Profile Fullname updated successfully!', user })
   // return res.json({ success: false, message: 'Something went wrong!' })
 }
+
+
+// shorts controllers start
+
+exports.GetAllShortVideos = async (req, res) => {
+  Shorts.findOne({}, function(err, result) {
+    if (err) throw err;
+    return res.json({ success: true, shorts: result.shorts })
+  })
+}
+
+
+exports.uploadShortVideos = async (req, res) => {
+  const video = req.file;
+  const { caption, category, userid } = req.body
+  const short = {
+    userid,
+    caption,
+    category,
+    video:video?.filename
+  };
+  const result = await Shorts.updateOne(
+    { /* Your query to identify the document to update */ },
+    { $push: { 'shorts': short }, }
+  );
+  if (result.nModified === 1) {
+    return res.json({ success: true, message: 'Short Uploaded successfully!' })
+  } else {
+    return res.json({ success: false, message: 'Something went wrong!' })
+  }
+}
+
+exports.updateShortVCategory = async (req, res) => {
+  const { category, userid } = req.body
+  await User.findByIdAndUpdate(
+    { _id: userid },
+    {
+      $set: {
+        'shorts.category': category, // Update the nested property
+      },
+    },
+    { new: true }
+  );
+  return res.json({ success: true, message: 'Category updated successfully!' })
+}
+
+exports.updateShortVCaption = async (req, res) => {
+  const { caption, userid } = req.body
+  await User.findByIdAndUpdate(
+    { _id: userid },
+    {
+      $set: {
+        'shorts.caption': caption, // Update the nested property
+      },
+    },
+    { new: true }
+  );
+  return res.json({ success: true, message: 'Caption updated successfully!' })
+}
+
+// shorts controllers end
+
+
 
 // exports.signOut = async (req, res) => {
 //   if (req.headers && req.headers.authorization) {
