@@ -32,6 +32,10 @@ const store = require('../middlewares/multer')
 
 // router.post('/sign-in', validateUserSignIn, userVlidation,userSignIn);
 router.post('/login', userSignIn);
+router.get('/test', (req, res) => {
+  res.json({message:"backend is running"})
+});
+
 
 router.post('/create', multer.single('avatar'), createUser);
 router.post('/verify-email', verifyEmail);
