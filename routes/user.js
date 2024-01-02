@@ -13,15 +13,16 @@ const {
   updatePodcastImage,
   updatePodcastDescription,
   updatePodcastCategory,
-  uploadShort,
   updateProfileImage,
   updateProfileFullname,
   updatePodcastVideos,
   uploadShortVideos,
-  uploadShortVCaption,
   updateShortVCategory,
   updateShortVCaption,
-  GetAllShortVideos
+  GetAllShortVideos,
+  getSingleUser,
+  FollowUser,
+  UnFollowUser
 } = require('../controllers/user');
 const {
   userVlidation, validateUserSignIn,
@@ -30,17 +31,26 @@ const { IsResetPassTokenValid } = require('../middlewares/validation/isresetpass
 const multer = require('../middlewares/multer');
 const store = require('../middlewares/multer')
 
-// router.post('/sign-in', validateUserSignIn, userVlidation,userSignIn);
-router.post('/login', userSignIn);
+// testing
 router.get('/test', (req, res) => {
   res.json({message:"backend is running"})
 });
 
+// router.post('/sign-in', validateUserSignIn, userVlidation,userSignIn);
+router.post('/login', userSignIn);
 
-router.post('/create', multer.single('avatar'), createUser);
+
+
+// router.post('/create', multer.single('avatar'), createUser);
+router.post('/create', createUser);
 router.post('/verify-email', verifyEmail);
 router.post('/forget-password', forgetPassword);
 router.post('/reset-password', resetPassword);
+router.post('/singleuser', getSingleUser);
+router.post('/follow', FollowUser);
+router.post('/unfollow', UnFollowUser);
+
+
 
 //  start podcast 
 router.post('/profile-image-update', multer.single('avatar'), updateProfileImage);
@@ -65,11 +75,6 @@ router.post('/pvideo-delete', deletePodcastVideo);
 router.post('/pimage-update', multer.single('avatar'), updatePodcastImage);
 router.post('/pdesc-update', updatePodcastDescription);
 router.post('/pcategory-update', updatePodcastCategory);
-router.post('/upload-short', store.single('short'), uploadShort);
-
-
-
-
 
 
 

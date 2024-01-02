@@ -34,7 +34,11 @@ const userSchema = new mongoose.Schema({
   },
   shorts:[],
   followers:[],
-  following:[]
+  following:[],
+  createdAt: {
+    type: Date,
+    default: Date.now
+  },
 });
 
 userSchema.pre('save', function (next) {

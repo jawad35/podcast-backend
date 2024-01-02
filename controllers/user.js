@@ -19,25 +19,25 @@ const { removeItemByName } = require('../helper/ItemRemoveFromArray');
 const { removeDataFromUploads } = require('../helper/removeDataFromUploads');
 // const cloudinary = require('../helper/imageUpload');
 exports.createUser = async (req, res) => {
-  const avatar = req.file;
-
-  const ext = avatar.originalname.substr(avatar.originalname.lastIndexOf('.'));
-  const filename = `${avatar.originalname.replace(/\s/g, '')}-${req.query.randomId}${ext}`
-  const { fullname, email, password } = req.body;
-  if (!fullname || !email || !password || !avatar) return sendErrorRemoveFile(res, "Please Provide all inputs!", filename)
+  // const ext = avatar.originalname.substr(avatar.originalname.lastIndexOf('.'));
+  // cons = `${avatar.originalname.replace(/\s/g, '')}-${req.query.randomId}${ext}`
+  const { fullname, email, password, image_url, isSocailLogin } = req.body;
+  if (!fullname || !email || !password) return sendError(res, "Please Provide all inputs!")
   const isNewUser = await User.isThisEmailInUse(email);
   if (!isNewUser) {
-    RemoveFiles(filename)
+    // RemoveFiles(filename)
     return res.json({
       success: false,
       message: 'This email is already in use, try sign-in',
+      isExist: true
     });
   }
   const user = await User({
     fullname,
     email,
     password,
-    avatar: filename
+    avatar: image_url,
+    verified: isSocailLogin ? true : false
   });
   const OTP = generateOTP()
   const verificationToken = new VerificationToken({
@@ -46,17 +46,22 @@ exports.createUser = async (req, res) => {
   })
   await verificationToken.save();
   await user.save();
-  sendMail(OTP, email, emailTemplate, 'Verify your email account')
+  if (!isSocailLogin) {
+    sendMail(OTP, email, emailTemplate, 'Verify your email account')
+  }
   res.json({ success: true, user });
 };
 
 exports.userSignIn = async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password, isSocailLogin } = req.body;
   const user = await User.findOne({ email });
   if (!user) return sendError(res, 'user not found, with the given email!')
-  const isMatch = await user.comparePassword(password);
-  if (!isMatch) return sendError(res, 'email / Password does not match!')
-  if (!user.verified) return sendError(res, 'Please verify the email first!')
+  if (!isSocailLogin) {
+    const isMatch = await user.comparePassword(password);
+    if (!isMatch) return sendError(res, 'email / Password does not match!')
+    if (!user.verified) return sendError(res, 'Please verify the email first!')
+
+  }
 
   const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
     expiresIn: '1d',
@@ -140,6 +145,69 @@ exports.resetPassword = async (req, res) => {
 
 }
 
+exports.getSingleUser = async (req, res) => {
+  const { userid } = req.body
+  const user = await User.findById(userid)
+  return res.json({ user, success: true })
+}
+
+
+exports.FollowUser = async (req, res) => {
+  try {
+    const { id, userid, uemail, oemail, uname, oname } = req.body
+    const yourselfData = {
+      id,
+      name: uname,
+      email: uemail,
+      createdAt: Date.now()
+    }
+    const followers = await User.findByIdAndUpdate(
+      { _id: userid },
+      { $push: { 'followers': yourselfData }, },
+      { new: true },
+    );
+
+    const otherUserData = {
+      id: userid,
+      name: oname,
+      email: oemail,
+      createdAt: Date.now()
+    }
+    const following = await User.findByIdAndUpdate(
+      { _id: id },
+      { $push: { 'following': otherUserData }, },
+      { new: true },
+    );
+    return res.json({ success: true, message: 'Followed successfully', followers: JSON.stringify(followers.followers.length), following: JSON.stringify(following.following.length) })
+  } catch (error) {
+    return sendError(res, "Something went wrong!")
+  }
+
+}
+
+exports.UnFollowUser = async (req, res) => {
+  try {
+    const userId = '6591b6ad3670f81a483e0817'; // Replace with the actual user ID
+    const followerIdToRemove = '65893f8ab02d832dc079d5c4'; // Replace with the actual follower ID to remove
+    const followers = await User.findByIdAndUpdate(
+      userId,
+      { $pull: { followers: { id: followerIdToRemove } } },
+      { new: true },
+    )
+
+    const following = await User.findByIdAndUpdate(
+      followerIdToRemove,
+      { $pull: { following: { id: userId } } },
+      { new: true },
+    )
+    return res.json({ success: true, message: 'UnFollowed successfully', followers: JSON.stringify(followers.followers.length), following: JSON.stringify(following.following.length) })
+  } catch (error) {
+    return sendError(res, "Something went wrong!")
+  }
+
+}
+
+
 exports.uploadPodcast = async (req, res) => {
   const image = req.files['avatar'][0];
   const videos = req.files['videos[]'];
@@ -169,7 +237,7 @@ exports.uploadPodcast = async (req, res) => {
 
 exports.updatePodcastVideos = async (req, res) => {
   const videos = req.files['videos[]'];
-  const {userid} = req.body
+  const { userid } = req.body
   if (!videos) {
     return sendErrorRemoveFile(res, "Please choose video")
   }
@@ -187,27 +255,26 @@ exports.updatePodcastVideos = async (req, res) => {
     },
     { new: true }
   );
-  return res.json({ success: true, message: 'Podcast Videos updated successfully', user:userData })
+  return res.json({ success: true, message: 'Podcast Videos updated successfully', user: userData })
 }
 
 
 exports.deletePodcastVideo = async (req, res) => {
-  const {userid, filename} = req.body
+  const { userid, filename } = req.body
   const user = await User.findById(userid)
   const podcastVideos = user.podcast.videos
   removeItemByName(podcastVideos, filename)
-  console.log(podcastVideos)
   removeDataFromUploads(filename)
-    const userData = await User.findByIdAndUpdate(
-      { _id: userid },
-      {
-        $set: {
-          'podcast.videos': podcastVideos, // Update the nested property
-        },
+  const userData = await User.findByIdAndUpdate(
+    { _id: userid },
+    {
+      $set: {
+        'podcast.videos': podcastVideos, // Update the nested property
       },
-      { new: true }
-    );
-  return res.json({ success: true, message: 'Video deleted successfully!', user:userData })
+    },
+    { new: true }
+  );
+  return res.json({ success: true, message: 'Video deleted successfully!', user: userData })
 }
 
 exports.updatePodcastImage = async (req, res) => {
@@ -216,15 +283,15 @@ exports.updatePodcastImage = async (req, res) => {
   const ext = avatar.originalname.substr(avatar.originalname.lastIndexOf('.'));
   const filename = `${avatar.originalname.replace(/\s/g, '')}-${req.query.randomId}${ext}`
   removeDataFromUploads(oldimage)
-    await User.findByIdAndUpdate(
-      { _id: userid },
-      {
-        $set: {
-          'podcast.image': filename, // Update the nested property
-        },
+  await User.findByIdAndUpdate(
+    { _id: userid },
+    {
+      $set: {
+        'podcast.image': filename, // Update the nested property
       },
-      { new: true }
-    );
+    },
+    { new: true }
+  );
   return res.json({ success: true, message: 'Image updated successfully!' })
 }
 
@@ -254,51 +321,6 @@ exports.updatePodcastCategory = async (req, res) => {
     { new: true }
   );
   return res.json({ success: true, message: 'Description updated successfully!' })
-}
-
-exports.uploadShort = async (req, res) => {
-  const short = req.files['short'];
-  const { description, category } = req.body
-
-  if (!short) {
-    return sendErrorRemoveFile(res, "Please choose video")
-  }
-  let videoArray = []
-  const podcast = {
-    description: description,
-    videos: videoArray,
-    category: category
-  }
-  await User.findByIdAndUpdate(
-    { _id: '658716afe7009f4710f70ab3' },
-    { podcast: podcast },
-    { new: true }
-  );
-  return res.json({ success: true, message: 'Podcast Created successfully' })
-
-
-
-  const ext = file1.originalname.substr(file1.originalname.lastIndexOf('.'));
-  // create object to store data in the collection
-  let finalImg = {
-    filename: `${file1.originalname}-${req.query.id}${ext}`,
-  }
-
-  let newUpload = new Media(finalImg);
-
-  return newUpload
-    .save()
-    .then(() => {
-      return { msg: `${file1.originalname} Uploaded Successfully...!` }
-    })
-    .catch(error => {
-      if (error) {
-        if (error.name === 'MongoError' && error.code === 11000) {
-          return Promise.reject({ error: `Duplicate ${file1.originalname}. File Already exists! ` });
-        }
-        return Promise.reject({ error: error.message || `Cannot Upload ${file1.originalname} Something Missing!` })
-      }
-    })
 }
 
 exports.updateProfileImage = async (req, res) => {
@@ -338,7 +360,7 @@ exports.updateProfileFullname = async (req, res) => {
 // shorts controllers start
 
 exports.GetAllShortVideos = async (req, res) => {
-  Shorts.findOne({}, function(err, result) {
+  Shorts.findOne({}, function (err, result) {
     if (err) throw err;
     return res.json({ success: true, shorts: result.shorts })
   })
@@ -352,7 +374,7 @@ exports.uploadShortVideos = async (req, res) => {
     userid,
     caption,
     category,
-    video:video.filename
+    video: video.filename
   };
   const result = await Shorts.updateOne(
     { /* Your query to identify the document to update */ },
