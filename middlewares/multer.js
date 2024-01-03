@@ -8,7 +8,7 @@ var storage = multer.diskStorage({
     },
     filename : function (req, file , cb){
         const ext = file.originalname.substr(file.originalname.lastIndexOf('.'));
-        cb(null, `${file.originalname.replace(/\s/g, '')}-${req.query.randomId}${ext}`)
+        cb(null, `http://207.180.232.109:8003/uploads/${file.originalname.replace(/\s/g, '')}-${req.query.randomId}${ext}`)
     }
 })
 

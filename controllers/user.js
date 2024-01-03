@@ -308,7 +308,7 @@ exports.updatePodcastImage = async (req, res) => {
   const avatar = req.file;
   const { oldimage, userid } = req.body
   const ext = avatar.originalname.substr(avatar.originalname.lastIndexOf('.'));
-  const filename = `${avatar.originalname.replace(/\s/g, '')}-${req.query.randomId}${ext}`
+  const filename = `http://207.180.232.109:8003/uploads/${avatar.originalname.replace(/\s/g, '')}-${req.query.randomId}${ext}`
   removeDataFromUploads(oldimage)
   await User.findByIdAndUpdate(
     { _id: userid },
@@ -354,7 +354,7 @@ exports.updateProfileImage = async (req, res) => {
   const avatar = req.file;
   const { oldimage, userid } = req.body
   const ext = avatar.originalname.substr(avatar.originalname.lastIndexOf('.'));
-  const filename = `${avatar.originalname.replace(/\s/g, '')}-${req.query.randomId}${ext}`
+  const filename = `http://207.180.232.109:8003/uploads/${avatar.originalname.replace(/\s/g, '')}-${req.query.randomId}${ext}`
   removeDataFromUploads(oldimage)
   const user = await User.findByIdAndUpdate(
     { _id: userid },
