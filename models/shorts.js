@@ -10,4 +10,7 @@ const shortsSchema = new mongoose.Schema({
 
 })
 
-module.exports = mongoose.model('Short', shortsSchema);
+module.exports = mongoose.model('Short', new mongoose.Schema({
+  // your schema here
+  shortsSchema
+ }));
