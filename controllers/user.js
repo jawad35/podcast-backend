@@ -402,13 +402,14 @@ exports.uploadShortVideos = async (req, res) => {
     userid,
     caption,
     category,
-    video: `${video.filename}`,
+    video: `http://207.180.232.109:8003/uploads/${video.filename}`,
     createdAt:Date.now()
   };
   console.log(short)
   const result = await Shorts.updateOne(
     { /* Your query to identify the document to update */ },
-    { $push: { 'shorts': short }, }
+    { $push: { 'shorts': short }, },
+    { upsert: true }
   );
   if (result.nModified === 1) {
     return res.json({ success: true, message: 'Short Uploaded successfully!' })
