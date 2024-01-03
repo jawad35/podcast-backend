@@ -228,10 +228,10 @@ exports.uploadPodcast = async (req, res) => {
     return sendErrorRemoveFile(res, "Please choose video")
   }
   let videoArray = []
-  videos.map(video => videoArray.push(`http://207.180.232.109:8003/uploads${video.filename}`))
+  videos.map(video => videoArray.push(`http://207.180.232.109:8003/uploads/${video.filename}`))
   const podcast = {
     description: description,
-    image: `http://207.180.232.109:8003/uploads${image.filename}`,
+    image: `http://207.180.232.109:8003/uploads/${image.filename}`,
     videos: videoArray,
     category: category
   }
@@ -270,7 +270,7 @@ exports.updatePodcastVideos = async (req, res) => {
   }
   const user = await User.findById(userid)
   const filenameArray = []
-  videos.map((video) => filenameArray.push(`http://207.180.232.109:8003/uploads${video.filename}`))
+  videos.map((video) => filenameArray.push(`http://207.180.232.109:8003/uploads/${video.filename}`))
   const podcastOldVideosArray = user.podcast.videos
   const AllVideos = filenameArray.concat(podcastOldVideosArray)
   const userData = await User.findByIdAndUpdate(
@@ -402,7 +402,7 @@ exports.uploadShortVideos = async (req, res) => {
     userid,
     caption,
     category,
-    video: `http://207.180.232.109:8003/uploads${video.filename}`,
+    video: `http://207.180.232.109:8003/uploads/${video.filename}`,
     createdAt:Date.now()
   };
   const result = await Shorts.updateOne(
