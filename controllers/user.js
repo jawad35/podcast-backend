@@ -412,7 +412,7 @@ exports.uploadShortVideos = async (req, res) => {
     { upsert: true }
   );
   console.log(result,'jo')
-  if (result.nModified === 1) {
+  if (result.n === 1) {
     return res.json({ success: true, message: 'Short Uploaded successfully!' })
   } else {
     return res.json({ success: false, message: 'Something went wrong!' })
