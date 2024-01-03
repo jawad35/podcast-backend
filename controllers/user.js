@@ -408,12 +408,12 @@ exports.uploadShortVideos = async (req, res) => {
   console.log(short)
   const result = await Shorts.updateOne(
     { /* Your query to identify the document to update */ },
-    { $push: { 'shorts': short }, },
-    { upsert: true }
+    { $push: { 'shorts': short }, }
   );
-  console.log(result.n === 1, result.ok ,'jo')
-  if (result.n == 1) {
-    return res.json({ success: true, message: 'Short Uploaded successfully!' })
+  console.log(result,'jo')
+  return res.json({ success: true, message: 'Short Uploaded successfully!' })
+
+  if (result.n === 1) {
   } else {
     return res.json({ success: false, message: 'Something went wrong!' })
   }
