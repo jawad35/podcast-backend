@@ -408,6 +408,7 @@ exports.uploadShortVideos = async (req, res) => {
   console.log(short)
   const count =  await Shorts.countDocuments()
   console.log(count)
+  return
   if (count === 0) {
     const result = await Shorts.updateOne(
       { /* Your query to identify the document to update */ },
