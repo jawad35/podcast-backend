@@ -356,7 +356,7 @@ exports.updateProfileImage = async (req, res) => {
   console.log(avatar, 'hel 9999')
   const ext = avatar.originalname.substr(avatar.originalname.lastIndexOf('.'));
   const filename = `http://207.180.232.109:8003/uploads/${avatar.originalname.replace(/\s/g, '')}-${req.query.randomId}${ext}`
-  // removeDataFromUploads(oldimage)
+  removeDataFromUploads(oldimage)
   const user = await User.findByIdAndUpdate(
     { _id: userid },
     {
