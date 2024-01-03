@@ -412,22 +412,25 @@ exports.uploadShortVideos = async (req, res) => {
       { $push: { 'shorts': short }, },
       { upsert: true }
     );
-    console.log(result, 'jo8')
-
+    if (result.n === 1) {
+      return res.json({ success: true, message: 'Short Uploaded successfully!' })
+    } else {
+      return res.json({ success: false, message: 'Something went wrong!' })
+    }
   } else {
     const result = await Shorts.updateOne(
       { /* Your query to identify the document to update */ },
       { $push: { 'shorts': short }, }
     );
-    console.log(result, 'jo')
+    if (result.nModified === 1) {
+      return res.json({ success: true, message: 'Short Uploaded successfully!' })
+    } else {
+      return res.json({ success: false, message: 'Something went wrong!' })
+    }
 
   }
-  return res.json({ success: true, message: 'Short Uploaded successfully!' })
 
-  if (result.n === 1) {
-  } else {
-    return res.json({ success: false, message: 'Something went wrong!' })
-  }
+ 
 }
 
 exports.updateShortVCategory = async (req, res) => {
