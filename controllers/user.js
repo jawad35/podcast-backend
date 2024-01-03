@@ -405,26 +405,23 @@ exports.uploadShortVideos = async (req, res) => {
     video: `http://207.180.232.109:8003/uploads/${video.filename}`,
     createdAt:Date.now()
   };
-  console.log(short)
   const count =  await Shorts.countDocuments()
-  console.log(count)
   if (count === 0) {
     const result = await Shorts.updateOne(
       { /* Your query to identify the document to update */ },
       { $push: { 'shorts': short }, },
       { upsert: true }
     );
-  console.log('caed')
+    console.log(result, 'jo8')
+
   } else {
     const result = await Shorts.updateOne(
       { /* Your query to identify the document to update */ },
       { $push: { 'shorts': short }, }
     );
-  console.log('onj')
+    console.log(result, 'jo')
 
   }
-
-  console.log(result,'jo')
   return res.json({ success: true, message: 'Short Uploaded successfully!' })
 
   if (result.n === 1) {
