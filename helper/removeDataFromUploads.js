@@ -1,9 +1,12 @@
 const fs = require('fs');
 exports.removeDataFromUploads = (filename) => {
 const filePath = `./uploads/${filename}`;
+console.log(filePath)
 
 try {
-  fs.unlinkSync(filePath);
+  if (filePath) {
+    fs.unlinkSync(filePath);
+  }
   console.log(`File ${filename} was successfully deleted`);
   return true
 } catch (err) {
