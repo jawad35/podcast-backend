@@ -22,7 +22,9 @@ const {
   GetAllShortVideos,
   getSingleUser,
   FollowUser,
-  UnFollowUser
+  UnFollowUser,
+  TrendingPodcasts,
+  AddCatgories
 } = require('../controllers/user');
 const {
   userVlidation, validateUserSignIn,
@@ -46,9 +48,12 @@ router.post('/create', createUser);
 router.post('/verify-email', verifyEmail);
 router.post('/forget-password', forgetPassword);
 router.post('/reset-password', resetPassword);
-router.post('/singleuser', getSingleUser);
+router.post('/getuser', getSingleUser);
+router.get('/trendings', TrendingPodcasts);
 router.post('/follow', FollowUser);
 router.post('/unfollow', UnFollowUser);
+router.post('/add-categories', AddCatgories);
+
 
 
 

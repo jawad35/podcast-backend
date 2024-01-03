@@ -33,6 +33,7 @@ const userSchema = new mongoose.Schema({
     category:''
   },
   shorts:[],
+  categories:[],
   followers:[],
   following:[],
   createdAt: {

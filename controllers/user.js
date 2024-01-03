@@ -103,7 +103,7 @@ exports.verifyEmail = async (req, res) => {
     { new: true }
   );
   sendMail(otp, user.email, VerifiefSuccessEmailTemplate, "Welcome Email")
-  res.json({ success: true, message: 'Email verified successfully' })
+  res.json({ success: true, message: 'Email verified successfully', user})
 }
 
 
@@ -157,7 +157,7 @@ exports.FollowUser = async (req, res) => {
     const { id, userid, uemail, oemail, uname, oname } = req.body
     const yourselfData = {
       id,
-      name: uname,
+      // name: uname,
       email: uemail,
       createdAt: Date.now()
     }
@@ -169,7 +169,7 @@ exports.FollowUser = async (req, res) => {
 
     const otherUserData = {
       id: userid,
-      name: oname,
+      // name: oname,
       email: oemail,
       createdAt: Date.now()
     }
@@ -186,18 +186,18 @@ exports.FollowUser = async (req, res) => {
 }
 
 exports.UnFollowUser = async (req, res) => {
+  const { id, userid } = req.body
+
   try {
-    const userId = '6591b6ad3670f81a483e0817'; // Replace with the actual user ID
-    const followerIdToRemove = '65893f8ab02d832dc079d5c4'; // Replace with the actual follower ID to remove
     const followers = await User.findByIdAndUpdate(
-      userId,
-      { $pull: { followers: { id: followerIdToRemove } } },
+      userid,
+      { $pull: { followers: { id: id } } },
       { new: true },
     )
 
     const following = await User.findByIdAndUpdate(
-      followerIdToRemove,
-      { $pull: { following: { id: userId } } },
+      id,
+      { $pull: { following: { id: userid } } },
       { new: true },
     )
     return res.json({ success: true, message: 'UnFollowed successfully', followers: JSON.stringify(followers.followers.length), following: JSON.stringify(following.following.length) })
@@ -207,6 +207,15 @@ exports.UnFollowUser = async (req, res) => {
 
 }
 
+exports.TrendingPodcasts = async (req, res) => {
+  try {
+    const trendings = await User.find({}, { _id: 1, fullname: 2, avatar:3 }).sort({ followers: -1 });
+    return res.json({ success: true, trendings  })
+  } catch (error) {
+    return sendError(res, "Something went wrong!")
+  }
+
+}
 
 exports.uploadPodcast = async (req, res) => {
   const image = req.files['avatar'][0];
@@ -234,6 +243,24 @@ exports.uploadPodcast = async (req, res) => {
   return res.json({ success: true, message: 'Podcast created successfully', user })
 }
 
+exports.AddCatgories = async (req, res) => {
+  const { id, categories } = req.body
+
+  try {
+    await User.findByIdAndUpdate(
+      { _id: id},
+      {
+        $set: {
+          'categories': categories, // Update the nested property
+        },
+      },
+    );
+    return res.json({ success: true, message: 'Categories added successfully'})
+  } catch (error) {
+    return sendError(res, "Something went wrong!")
+  }
+
+}
 
 exports.updatePodcastVideos = async (req, res) => {
   const videos = req.files['videos[]'];
@@ -374,7 +401,8 @@ exports.uploadShortVideos = async (req, res) => {
     userid,
     caption,
     category,
-    video: video.filename
+    video: video.filename,
+    createdAt:Date.now()
   };
   const result = await Shorts.updateOne(
     { /* Your query to identify the document to update */ },
