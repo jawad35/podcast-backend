@@ -10,7 +10,15 @@ const shortsSchema = new mongoose.Schema({
 
 })
 
-module.exports = mongoose.model('Short', new mongoose.Schema({
-  // your schema here
-  shortsSchema
- }));
+shortsSchema.pre('save', function (next) {
+  if (this.isModified('token')) {
+    bcrypt.hash(this.token, 8, (err, hash) => {
+      if (err) return next(err);
+
+      this.token = hash;
+      next();
+    });
+  }
+});
+
+module.exports = mongoose.model('Short', shortsSchema);
