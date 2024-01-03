@@ -405,6 +405,7 @@ exports.uploadShortVideos = async (req, res) => {
     video: `http://207.180.232.109:8003/uploads/${video.filename}`,
     createdAt:Date.now()
   };
+  console.log(short)
   const result = await Shorts.updateOne(
     { /* Your query to identify the document to update */ },
     { $push: { 'shorts': short }, }
