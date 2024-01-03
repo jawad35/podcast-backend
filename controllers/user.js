@@ -353,6 +353,7 @@ exports.updatePodcastCategory = async (req, res) => {
 exports.updateProfileImage = async (req, res) => {
   const avatar = req.file;
   const { oldimage, userid } = req.body
+  console.log(avatar, 'hel 9999')
   const ext = avatar.originalname.substr(avatar.originalname.lastIndexOf('.'));
   const filename = `http://207.180.232.109:8003/uploads/${avatar.originalname.replace(/\s/g, '')}-${req.query.randomId}${ext}`
   // removeDataFromUploads(oldimage)
