@@ -1,15 +1,7 @@
 const mongoose = require('mongoose');
 
 const shortsSchema = new mongoose.Schema({
-    shorts:[
-      {
-        userid:'',
-        caption:'',
-        category:'',
-        video: `http://207.180.232.109:8003/uploads/`,
-        createdAt:Date.now()
-      }
-    ],
+    shorts:[],
     createdAt: {
         type: Date,
         default: Date.now
