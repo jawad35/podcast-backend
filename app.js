@@ -9,8 +9,6 @@ const mediaRoute = require('./routes/media')
 const subsRoute = require('./routes/subs');
 // const SocketServer = require('./SocketServer');
 const Port = process.env.PORT || 8000
-const cors = require("cors");
-app.use(cors());
 //adding socket.io configuration
 const http = require('http');
 const server = http.createServer(app);
