@@ -405,7 +405,7 @@ exports.updateProfileRole = async (req, res) => {
 exports.GetAllShortVideos = async (req, res) => {
   Shorts.findOne({}, function (err, result) {
     if (err) throw err;
-    return res.json({ success: true, shorts: result.shorts })
+    return res.json({ success: true, shorts: result?.shorts ? result?.shorts : [] })
   })
 }
 
