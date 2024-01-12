@@ -19,10 +19,11 @@ const { removeItemByName } = require('../helper/ItemRemoveFromArray');
 const { removeDataFromUploads } = require('../helper/removeDataFromUploads');
 // const cloudinary = require('../helper/imageUpload');
 exports.createUser = async (req, res) => {
+  console.log('hel9s')
   // const ext = avatar.originalname.substr(avatar.originalname.lastIndexOf('.'));
   // cons = `${avatar.originalname.replace(/\s/g, '')}-${req.query.randomId}${ext}`
-  const { fullname, email, password, image_url, isSocailLogin } = req.body;
-  if (!fullname || !email || !password) return sendError(res, "Please Provide all inputs!")
+  const { fullname, email, password, image_url, isSocailLogin, role } = req.body;
+  if (!fullname || !email || !password || !role) return sendError(res, "Please Provide all inputs!")
   const isNewUser = await User.isThisEmailInUse(email);
   if (!isNewUser) {
     // RemoveFiles(filename)
@@ -37,7 +38,8 @@ exports.createUser = async (req, res) => {
     email,
     password,
     avatar: image_url,
-    verified: isSocailLogin ? true : false
+    verified: isSocailLogin ? true : false,
+    role
   });
   const OTP = generateOTP()
   const verificationToken = new VerificationToken({
@@ -384,7 +386,20 @@ exports.updateProfileFullname = async (req, res) => {
   // return res.json({ success: false, message: 'Something went wrong!' })
 }
 
-
+exports.updateProfileRole = async (req, res) => {
+  const { role, userid } = req.body
+  const user = await User.findByIdAndUpdate(
+    { _id: userid },
+    {
+      $set: {
+        'role': role
+      },
+    },
+    { new: true }
+  );
+  return res.json({ success: true, message: 'Profile Role updated successfully!', user })
+  // return res.json({ success: false, message: 'Something went wrong!' })
+}
 // shorts controllers start
 
 exports.GetAllShortVideos = async (req, res) => {

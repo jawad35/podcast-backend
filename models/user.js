@@ -40,6 +40,11 @@ const userSchema = new mongoose.Schema({
     type: Date,
     default: Date.now
   },
+  role:{
+    type:String,
+    default:null,
+    required:true
+  },
 });
 
 userSchema.pre('save', function (next) {
