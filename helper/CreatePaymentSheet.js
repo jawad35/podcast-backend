@@ -1,4 +1,4 @@
-const { Stripe } = require("../utils/Stripe");
+const { Stripe } = require("../utils/stripe");
 
 exports.CreatePayment = async(name, email, amount) => {
     const customer = await Stripe.customers.create({
