@@ -19,7 +19,6 @@ const { removeItemByName } = require('../helper/ItemRemoveFromArray');
 const { removeDataFromUploads } = require('../helper/removeDataFromUploads');
 const { CreatePayment } = require('../helper/CreatePaymentSheet');
 const SubSuccessEmailTemplate = require('../utils/subscriptionEmailTemplate');
-// const { Stripe } = require('../utils/stripe');
 // const cloudinary = require('../helper/imageUpload');
 exports.createUser = async (req, res) => {
   // const ext = avatar.originalname.substr(avatar.originalname.lastIndexOf('.'));

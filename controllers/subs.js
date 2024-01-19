@@ -1,5 +1,5 @@
 const User = require("../models/user");
-const { Stripe } = require("../utils/Stripe");
+const { Stripe } = require("../utils/stripe");
 
 exports.getPrices = async (req, res) => {
     await Stripe.prices.list().then(pricelist => {
