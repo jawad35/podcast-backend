@@ -17,7 +17,6 @@ const ResetPassSuccessTemplate = require('../utils/resetPassSuccess');
 const { RemoveFiles } = require('../helper/removefiles');
 const { removeItemByName } = require('../helper/ItemRemoveFromArray');
 const { removeDataFromUploads } = require('../helper/removeDataFromUploads');
-const { Stripe } = require('../utils/Stripe');
 const { CreatePayment } = require('../helper/CreatePaymentSheet');
 const SubSuccessEmailTemplate = require('../utils/subscriptionEmailTemplate');
 // const { Stripe } = require('../utils/stripe');
