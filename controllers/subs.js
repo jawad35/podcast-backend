@@ -1,37 +1,63 @@
-const stripe = require('stripe');
+const User = require("../models/user");
+const { Stripe } = require("../utils/Stripe");
 
 exports.getPrices = async (req, res) => {
-    await stripe.prices.list({
-        apiKey: 'sk_test_51MslBhAeOlKaLrSIQFHv1AWeWHWLiONnauCw7vLShk221OX68JjXjacq9hwFdMNTj9eONk7dW221xrWWm71p1KIu0045Tjg5HQ',
-      }).then(pricelist => {
-        console.log(pricelist.data, 'helo')
+    await Stripe.prices.list().then(pricelist => {
         return res.json({success:true, prices:pricelist})
+      }).catch(err => {
+        return res.json({success:false, prices:[]})
       });
       // return res.json({ success: false, message: 'Something went wrong!' })
 }
-exports.createSubscription = async (req, res) => {
-  const { paymentMethodId, priceId } = req.body;
+exports.createSession = async (req, res) => {
+  const user = await User.findOne({ email: req.user });
 
-  try {
-    // Create a customer
-    const customer = await stripe.customers.create({
-      payment_method: paymentMethodId,
-      email: 'customer@example.com',
-      invoice_settings: {
-        default_payment_method: paymentMethodId,
-      },
-    });
+  const session = await Stripe.checkout.sessions.create(
+    {
+      mode: "subscription",
+      payment_method_types: ["card"],
+      line_items: [
+        {
+          price: req.body.priceId,
+          quantity: 1,
+        },
+      ],
+      success_url: "http://localhost:3000/articles",
+      cancel_url: "http://localhost:3000/article-plans",
+      customer: user.stripeCustomerId,
+    },
+    {
+      apiKey: process.env.STRIPE_SECRET_KEY,
+    }
+  );
 
-    // Create a subscription
-    const subscription = await stripe.subscriptions.create({
-      customer: customer.id,
-      items: [{ price: priceId }],
-      expand: ['latest_invoice.payment_intent'],
-    });
-
-    res.json(subscription);
-  } catch (error) {
-    console.error(error);
-    res.status(500).send({ error: 'Subscription failed' });
-  }
+  return res.json(session);
 };
+
+exports.createSubscription = async (req, res) => {
+ // Use an existing Customer ID if this is a returning customer.
+
+ const {amount, name, email } = req.body
+
+ const customer = await Stripe.customers.create({
+  name: name,
+  email: email,
+})
+ const ephemeralKey = await Stripe.ephemeralKeys.create(
+   {customer: customer.id},
+   {apiVersion: '2022-11-15'}
+ );
+ const paymentIntent = await Stripe.paymentIntents.create({
+   amount: amount,
+   currency: 'usd',
+   customer: customer.id,
+   payment_method_types: [ 'card'],
+ });
+
+ res.json({
+   paymentIntent: paymentIntent.client_secret,
+   ephemeralKey: ephemeralKey.secret,
+   customer: customer.id,
+ });
+};
+

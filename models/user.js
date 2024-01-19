@@ -16,35 +16,56 @@ const userSchema = new mongoose.Schema({
     required: true,
   },
   avatar: String,
-  verified:{
-    type:Boolean,
-    default:false,
-    required:true
+  verified: {
+    type: Boolean,
+    default: false,
+    required: true
   },
-  subscription:{
-    type:Boolean,
-    default:false,
-    required:true
+  subscriptionData: [{
+    subscription: {
+      type: Boolean,
+      default: false,
+      required: true
+    },
+    type: {
+      type: String,
+      default: null,
+      required: true
+    },
+    subscriptionDate: {
+      type: Date,
+      default: Date.now
+    }
+
+  }],
+  freeTrial: {
+    type: Boolean,
+    default: false,
+    required: true
   },
-  podcast:{
-    description:'',
-    image:'',
-    videos:[],
-    category:''
+  podcast: {
+    description: '',
+    image: '',
+    videos: [],
+    category: ''
   },
-  shorts:[],
-  categories:[],
-  followers:[],
-  following:[],
+  shorts: [],
+  categories: [],
+  followers: [],
+  following: [],
   createdAt: {
     type: Date,
     default: Date.now
   },
-  role:{
-    type:String,
-    default:null,
-    required:true
+  role: {
+    type: String,
+    default: null,
+    required: true
   },
+  // stripeCustomerId: {
+  //   type: String,
+  //   required: true,
+  // }
 });
 
 userSchema.pre('save', function (next) {

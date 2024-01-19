@@ -25,7 +25,9 @@ const {
   UnFollowUser,
   TrendingPodcasts,
   AddCatgories,
-  updateProfileRole
+  updateProfileRole,
+  IsUserExist,
+  updateSubscription
 } = require('../controllers/user');
 const {
   userVlidation, validateUserSignIn,
@@ -51,6 +53,9 @@ router.post('/forget-password', forgetPassword);
 router.post('/reset-password', resetPassword);
 router.post('/getuser', getSingleUser);
 router.post('/update-role', updateProfileRole);
+router.post('/update-subscription', updateSubscription);
+router.post('/is-user-exist', IsUserExist);
+
 
 router.get('/trendings', TrendingPodcasts);
 router.post('/follow', FollowUser);

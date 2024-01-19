@@ -17,12 +17,15 @@ const ResetPassSuccessTemplate = require('../utils/resetPassSuccess');
 const { RemoveFiles } = require('../helper/removefiles');
 const { removeItemByName } = require('../helper/ItemRemoveFromArray');
 const { removeDataFromUploads } = require('../helper/removeDataFromUploads');
+const { Stripe } = require('../utils/Stripe');
+const { CreatePayment } = require('../helper/CreatePaymentSheet');
+const SubSuccessEmailTemplate = require('../utils/subscriptionEmailTemplate');
+// const { Stripe } = require('../utils/stripe');
 // const cloudinary = require('../helper/imageUpload');
 exports.createUser = async (req, res) => {
-  console.log('hel9s')
   // const ext = avatar.originalname.substr(avatar.originalname.lastIndexOf('.'));
   // cons = `${avatar.originalname.replace(/\s/g, '')}-${req.query.randomId}${ext}`
-  const { fullname, email, password, image_url, isSocailLogin, role } = req.body;
+  const { fullname, email, password, image_url, isSocailLogin, role, categories } = req.body;
   if (!fullname || !email || !password || !role) return sendError(res, "Please Provide all inputs!")
   const isNewUser = await User.isThisEmailInUse(email);
   if (!isNewUser) {
@@ -33,13 +36,25 @@ exports.createUser = async (req, res) => {
       isExist: true
     });
   }
+  let subscriptionData = null
+  if (role == 2) {
+    subscriptionData = [{
+      subscription: true,
+      type: "Free Trail"
+    }]
+  } 
+
   const user = await User({
     fullname,
     email,
     password,
     avatar: image_url,
-    verified: isSocailLogin ? true : false,
-    role
+    verified: isSocailLogin,
+    role,
+    categories,
+    // stripeCustomerId: role == 2 ? customer?.id : null,
+    freeTrial: role == 2,
+    subscriptionData
   });
   const OTP = generateOTP()
   const verificationToken = new VerificationToken({
@@ -105,7 +120,7 @@ exports.verifyEmail = async (req, res) => {
     { new: true }
   );
   sendMail(otp, user.email, VerifiefSuccessEmailTemplate, "Welcome Email")
-  res.json({ success: true, message: 'Email verified successfully', user})
+  res.json({ success: true, message: 'Email verified successfully', user })
 }
 
 
@@ -211,8 +226,8 @@ exports.UnFollowUser = async (req, res) => {
 
 exports.TrendingPodcasts = async (req, res) => {
   try {
-    const trendings = await User.find({}, { _id: 1, fullname: 2, avatar:3 }).sort({ followers: -1 });
-    return res.json({ success: true, trendings  })
+    const trendings = await User.find({}, { _id: 1, fullname: 2, avatar: 3 }).sort({ followers: -1 });
+    return res.json({ success: true, trendings })
   } catch (error) {
     return sendError(res, "Something went wrong!")
   }
@@ -250,14 +265,14 @@ exports.AddCatgories = async (req, res) => {
 
   try {
     await User.findByIdAndUpdate(
-      { _id: id},
+      { _id: id },
       {
         $set: {
           'categories': categories, // Update the nested property
         },
       },
     );
-    return res.json({ success: true, message: 'Categories added successfully'})
+    return res.json({ success: true, message: 'Categories added successfully' })
   } catch (error) {
     return sendError(res, "Something went wrong!")
   }
@@ -400,6 +415,40 @@ exports.updateProfileRole = async (req, res) => {
   return res.json({ success: true, message: 'Profile Role updated successfully!', user })
   // return res.json({ success: false, message: 'Something went wrong!' })
 }
+
+exports.updateSubscription = async (req, res) => {
+  const { type, userid, email } = req.body
+  console.log(req.body)
+  const subscriptionData = [{
+    subscription: true,
+    type: type
+  }]
+  const user = await User.findByIdAndUpdate(
+    { _id: userid },
+    {
+      $set: {
+        'subscriptionData': subscriptionData
+      },
+    },
+    { new: true }
+  );
+  sendMail(type, email, SubSuccessEmailTemplate, "Welcome Podcast Tonight Subscription Plan")
+  return res.json({ success: true, message: 'Payment Done successfully!', user })
+  // return res.json({ success: false, message: 'Something went wrong!' })
+}
+
+exports.IsUserExist = async (req, res) => {
+  const { email } = req.body
+
+  const user = await User.findOne({ email });
+  console.log(user, email)
+  if (user) {
+    return res.json({ success: true, user })
+  } else {
+    return res.json({ success: false, user })
+  }
+  // return res.json({ success: false, message: 'Something went wrong!' })
+}
 // shorts controllers start
 
 exports.GetAllShortVideos = async (req, res) => {
@@ -418,9 +467,9 @@ exports.uploadShortVideos = async (req, res) => {
     caption,
     category,
     video: `http://207.180.232.109:8003/uploads/${video.filename}`,
-    createdAt:Date.now()
+    createdAt: Date.now()
   };
-  const count =  await Shorts.countDocuments()
+  const count = await Shorts.countDocuments()
   if (count === 0) {
     const result = await Shorts.updateOne(
       { /* Your query to identify the document to update */ },
@@ -445,7 +494,7 @@ exports.uploadShortVideos = async (req, res) => {
 
   }
 
- 
+
 }
 
 exports.updateShortVCategory = async (req, res) => {
