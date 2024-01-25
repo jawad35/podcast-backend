@@ -27,7 +27,8 @@ const {
   AddCatgories,
   updateProfileRole,
   IsUserExist,
-  updateSubscription
+  updateSubscription,
+  uploadAttachment
 } = require('../controllers/user');
 const {
   userVlidation, validateUserSignIn,
@@ -55,6 +56,8 @@ router.post('/getuser', getSingleUser);
 router.post('/update-role', updateProfileRole);
 router.post('/update-subscription', updateSubscription);
 router.post('/is-user-exist', IsUserExist);
+// router.post('/compress', store.single('video'), uploadAttachment);
+// https://blog.logrocket.com/build-video-upload-compression-app-multer-react-native/
 
 
 router.get('/trendings', TrendingPodcasts);

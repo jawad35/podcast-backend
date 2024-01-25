@@ -1,7 +1,6 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 const Shorts = require('../models/shorts');
-
 const sharp = require('sharp');
 const VerificationToken = require('../models/verificationToken');
 const generateOTP = require('../utils/generateOTP');
@@ -19,6 +18,7 @@ const { removeItemByName } = require('../helper/ItemRemoveFromArray');
 const { removeDataFromUploads } = require('../helper/removeDataFromUploads');
 const { CreatePayment } = require('../helper/CreatePaymentSheet');
 const SubSuccessEmailTemplate = require('../utils/subscriptionEmailTemplate');
+const ffmpeg = require('fluent-ffmpeg')
 // const cloudinary = require('../helper/imageUpload');
 exports.createUser = async (req, res) => {
   // const ext = avatar.originalname.substr(avatar.originalname.lastIndexOf('.'));
@@ -232,6 +232,55 @@ exports.TrendingPodcasts = async (req, res) => {
 
 }
 
+// export const uploadAttachment = async (req, res) => {
+//   try {
+//               const inputBuffer = req.file.buffer;
+
+//               //save buffer to file
+//               const inputFileExtension = path.extname(req.file.originalname);
+//               const today = new Date();
+//               const dateTime = today.toLocaleString();
+//               const inputFile = `${dateTime}-input${inputFileExtension}`;
+
+
+
+//               console.log("Saving file to disk...", inputFile);
+
+//               fs.writeFileSync(inputFile, inputBuffer);
+//               console.log("File saved to disk.");
+
+//               console.log(`Checking input filesize in bytes`);
+//               await checkFileSize(inputFile);
+
+//               ffmpeg = require('fluent-ffmpeg')(inputFile)
+//                   .output(req.file.originalname)
+//                   .videoCodec("libx264")
+//                   .audioCodec('aac')
+//                   .videoBitrate(`1k`)
+//                   .autopad()
+//                   .on("end", async function () {
+//                       console.log("Video compression complete!");
+
+//                       const bucket = firebase.storage().bucket();
+//                       const newFile = bucket.file(req.file.originalname);
+//                       await newFile.save(`./${req.file.originalname}`);
+
+//                       console.log(`Checking output filesize in bytes`);
+//                       await checkFileSize(`./${req.file.originalname}`);
+
+//                       fs.unlinkSync(inputFile);
+//                       fs.unlinkSync(req.file.originalname)
+//                       res.json("Files uploaded successfully.");
+//                   })
+//                   .run();
+//           }
+//    catch (error) {
+//       console.log(error)
+//       res.status(500).send({
+//           message: "Something went wrong while uploading..."
+//       })
+//   }
+// }
 exports.uploadPodcast = async (req, res) => {
   const image = req.files['avatar'][0];
   const videos = req.files['videos[]'];
@@ -368,7 +417,6 @@ exports.updatePodcastCategory = async (req, res) => {
 exports.updateProfileImage = async (req, res) => {
   const avatar = req.file;
   const { oldimage, userid } = req.body
-  console.log(avatar, 'hel 9999')
   const ext = avatar.originalname.substr(avatar.originalname.lastIndexOf('.'));
   const filename = `http://207.180.232.109:8003/uploads/${avatar.originalname.replace(/\s/g, '')}-${req.query.randomId}${ext}`
   removeDataFromUploads(oldimage)
