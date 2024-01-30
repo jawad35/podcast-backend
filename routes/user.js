@@ -28,7 +28,8 @@ const {
   updateProfileRole,
   IsUserExist,
   updateSubscription,
-  uploadAttachment
+  uploadAttachment,
+  getPodcastBycategory
 } = require('../controllers/user');
 const {
   userVlidation, validateUserSignIn,
@@ -56,6 +57,8 @@ router.post('/getuser', getSingleUser);
 router.post('/update-role', updateProfileRole);
 router.post('/update-subscription', updateSubscription);
 router.post('/is-user-exist', IsUserExist);
+router.post('/get-podcast-category', getPodcastBycategory);
+
 // router.post('/compress', store.single('video'), uploadAttachment);
 // https://blog.logrocket.com/build-video-upload-compression-app-multer-react-native/
 
@@ -79,7 +82,7 @@ router.post('/upload-podcast-videos', store.fields([{ name: 'videos[]'}]), updat
 
 // start shorts
 
-router.post('/upload-short-videos', store.single('short'), uploadShortVideos);
+router.post('/upload-short-videos', store.fields([{ name: 'thumbnail', maxCount: 1 }, { name: 'short'}]), uploadShortVideos);
 router.post('/update-shortv-category', updateShortVCategory);
 router.post('/update-shortv-caption', updateShortVCaption);
 router.get('/get-short-videos', GetAllShortVideos);

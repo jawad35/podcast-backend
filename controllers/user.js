@@ -18,9 +18,11 @@ const { removeItemByName } = require('../helper/ItemRemoveFromArray');
 const { removeDataFromUploads } = require('../helper/removeDataFromUploads');
 const { CreatePayment } = require('../helper/CreatePaymentSheet');
 const SubSuccessEmailTemplate = require('../utils/subscriptionEmailTemplate');
-const ffmpeg = require('fluent-ffmpeg')
+const ffmpeg = require('fluent-ffmpeg');
+const Short = require('../models/shorts');
 // const cloudinary = require('../helper/imageUpload');
 exports.createUser = async (req, res) => {
+  console.log('jkk')
   // const ext = avatar.originalname.substr(avatar.originalname.lastIndexOf('.'));
   // cons = `${avatar.originalname.replace(/\s/g, '')}-${req.query.randomId}${ext}`
   const { fullname, email, password, image_url, isSocailLogin, role, categories } = req.body;
@@ -40,7 +42,7 @@ exports.createUser = async (req, res) => {
       subscription: true,
       type: "Free Trail"
     }]
-  } 
+  }
 
   const user = await User({
     fullname,
@@ -68,6 +70,8 @@ exports.createUser = async (req, res) => {
 };
 
 exports.userSignIn = async (req, res) => {
+  console.log('jkk')
+
   const { email, password, isSocailLogin } = req.body;
   const user = await User.findOne({ email });
   if (!user) return sendError(res, 'user not found, with the given email!')
@@ -161,9 +165,16 @@ exports.resetPassword = async (req, res) => {
 }
 
 exports.getSingleUser = async (req, res) => {
-  const { userid } = req.body
-  const user = await User.findById(userid)
+  const { category } = req.body
+  const user = await User.find(category)
   return res.json({ user, success: true })
+}
+
+exports.getPodcastBycategory = async (req, res) => {
+  const { category } = req.body
+  const podcasts = await User.find()
+  const FilterPodcast = podcasts.filter(user => user.podcast.category === category);
+  return res.json({ podcasts: FilterPodcast, success: true })
 }
 
 
@@ -292,10 +303,10 @@ exports.uploadPodcast = async (req, res) => {
     return sendErrorRemoveFile(res, "Please choose video")
   }
   let videoArray = []
-  videos.map(video => videoArray.push(`http://207.180.232.109:8003/uploads/${video.filename}`))
+  videos.map(video => videoArray.push(`${video.filename}`))
   const podcast = {
     description: description,
-    image: `http://207.180.232.109:8003/uploads/${image.filename}`,
+    image: `${image.filename}`,
     videos: videoArray,
     category: category
   }
@@ -334,7 +345,7 @@ exports.updatePodcastVideos = async (req, res) => {
   }
   const user = await User.findById(userid)
   const filenameArray = []
-  videos.map((video) => filenameArray.push(`http://207.180.232.109:8003/uploads/${video.filename}`))
+  videos.map((video) => filenameArray.push(`${video.filename}`))
   const podcastOldVideosArray = user.podcast.videos
   const AllVideos = filenameArray.concat(podcastOldVideosArray)
   const userData = await User.findByIdAndUpdate(
@@ -372,7 +383,7 @@ exports.updatePodcastImage = async (req, res) => {
   const avatar = req.file;
   const { oldimage, userid } = req.body
   const ext = avatar.originalname.substr(avatar.originalname.lastIndexOf('.'));
-  const filename = `http://207.180.232.109:8003/uploads/${avatar.originalname.replace(/\s/g, '')}-${req.query.randomId}${ext}`
+  const filename = `${avatar.originalname.replace(/\s/g, '')}-${req.query.randomId}${ext}`
   removeDataFromUploads(oldimage)
   await User.findByIdAndUpdate(
     { _id: userid },
@@ -418,8 +429,12 @@ exports.updateProfileImage = async (req, res) => {
   const avatar = req.file;
   const { oldimage, userid } = req.body
   const ext = avatar.originalname.substr(avatar.originalname.lastIndexOf('.'));
-  const filename = `http://207.180.232.109:8003/uploads/${avatar.originalname.replace(/\s/g, '')}-${req.query.randomId}${ext}`
-  removeDataFromUploads(oldimage)
+  const filename = `${avatar.originalname.replace(/\s/g, '')}-${req.query.randomId}${ext}`
+  if (oldimage !== null || oldimage !== "null") {
+    const match = oldimage.match(/8003\/(.*)/);
+    const extractedString = match ? match[1] : null;
+    removeDataFromUploads(extractedString)
+  }
   const user = await User.findByIdAndUpdate(
     { _id: userid },
     {
@@ -485,9 +500,7 @@ exports.updateSubscription = async (req, res) => {
 
 exports.IsUserExist = async (req, res) => {
   const { email } = req.body
-
   const user = await User.findOne({ email });
-  console.log(user, email)
   if (user) {
     return res.json({ success: true, user })
   } else {
@@ -504,44 +517,58 @@ exports.GetAllShortVideos = async (req, res) => {
   })
 }
 
+exports.GetAllPodcasts = async (req, res) => {
+  Shorts.findOne({}, function (err, result) {
+    if (err) throw err;
+    return res.json({ success: true, shorts: result?.shorts ? result?.shorts : [] })
+  })
+}
+
 
 exports.uploadShortVideos = async (req, res) => {
-  const video = req.file;
+  const thumbnail = req.files['thumbnail'][0];
+  const video = req.files['short'][0];
   const { caption, category, userid } = req.body
-  const short = {
+
+  const short = await Short({
     userid,
     caption,
     category,
-    video: `http://207.180.232.109:8003/uploads/${video.filename}`,
+    video: `${video.filename}`,
+    thumbnail: `${thumbnail.filename}`,
     createdAt: Date.now()
-  };
-  const count = await Shorts.countDocuments()
-  if (count === 0) {
-    const result = await Shorts.updateOne(
-      { /* Your query to identify the document to update */ },
-      { $push: { 'shorts': short }, },
-      { upsert: true }
-    );
-    if (result.n === 1) {
-      return res.json({ success: true, message: 'Short Uploaded successfully!' })
-    } else {
-      return res.json({ success: false, message: 'Something went wrong!' })
-    }
-  } else {
-    const result = await Shorts.updateOne(
-      { /* Your query to identify the document to update */ },
-      { $push: { 'shorts': short }, }
-    );
-    if (result.nModified === 1) {
-      return res.json({ success: true, message: 'Short Uploaded successfully!' })
-    } else {
-      return res.json({ success: false, message: 'Something went wrong!' })
-    }
+  });
 
-  }
+  short.save().then(res => console.log(res, 'waj yar'))
+  return res.json({ success: true, message: 'Short Uploaded successfully!' })
 
+  // const count = await Shorts.countDocuments()
+  // if (count === 0) {
+  //   const result = await Shorts.updateOne(
+  //     { /* Your query to identify the document to update */ },
+  //     { $push: { 'shorts': short }, },
+  //     { upsert: true }
+  //   );
+  //   if (result.n === 1) {
+  //     return res.json({ success: true, message: 'Short Uploaded successfully!' })
+  //   } else {
+  //     return res.json({ success: false, message: 'Something went wrong!' })
+  //   }
+  // } else {
+  //   const result = await Shorts.updateOne(
+  //     { /* Your query to identify the document to update */ },
+  //     { $push: { 'shorts': short }, }
+  //   );
+  //   if (result.nModified === 1) {
+  //     return res.json({ success: true, message: 'Short Uploaded successfully!' })
+  //   } else {
+  //     return res.json({ success: false, message: 'Something went wrong!' })
+  //   }
+
+  // }
 
 }
+
 
 exports.updateShortVCategory = async (req, res) => {
   const { category, userid } = req.body

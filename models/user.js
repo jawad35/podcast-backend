@@ -62,6 +62,10 @@ const userSchema = new mongoose.Schema({
     default: null,
     required: true
   },
+  avatar: {
+    type: String,
+    default: 'https://res.cloudinary.com/dqmoofr4j/image/upload/v1704196080/podcast/default_image_r8phxz.jpg'
+  },
   // stripeCustomerId: {
   //   type: String,
   //   required: true,
