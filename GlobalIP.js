@@ -1,1 +1,0 @@
-exports.Global_IP = '192.168.10.4'

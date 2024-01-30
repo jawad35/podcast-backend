@@ -29,7 +29,8 @@ const {
   IsUserExist,
   updateSubscription,
   uploadAttachment,
-  getPodcastBycategory
+  getPodcastBycategory,
+  deleteShortVideo
 } = require('../controllers/user');
 const {
   userVlidation, validateUserSignIn,
@@ -86,6 +87,8 @@ router.post('/upload-short-videos', store.fields([{ name: 'thumbnail', maxCount:
 router.post('/update-shortv-category', updateShortVCategory);
 router.post('/update-shortv-caption', updateShortVCaption);
 router.get('/get-short-videos', GetAllShortVideos);
+router.post('/svideo-delete', deleteShortVideo);
+
 
 
 

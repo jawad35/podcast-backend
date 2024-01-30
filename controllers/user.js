@@ -511,10 +511,24 @@ exports.IsUserExist = async (req, res) => {
 // shorts controllers start
 
 exports.GetAllShortVideos = async (req, res) => {
-  Shorts.findOne({}, function (err, result) {
-    if (err) throw err;
-    return res.json({ success: true, shorts: result?.shorts ? result?.shorts : [] })
-  })
+  const shorts = await Shorts.find()
+  return res.json({ success: true, shorts })
+}
+
+exports.deleteShortVideo = async (req, res) => {
+  const { id, filename, thumbnail } = req.body
+  try {
+    await Short.findByIdAndDelete(id).then(async (res) => {
+      removeDataFromUploads(`./uploads/${filename}`)
+      removeDataFromUploads(`./uploads/${thumbnail}`)
+    }).catch(error => {
+      return res.json({ success: false, message: 'Something went wrong!', shorts: [] })
+    })
+    const newShorts = await Short.find()
+      return res.json({ success: true, message: 'Video deleted successfully!', shorts: newShorts })
+  } catch (error) {
+    return res.json({ success: false, message: 'Something went wrong!', shorts: [] })
+  }
 }
 
 exports.GetAllPodcasts = async (req, res) => {
