@@ -103,7 +103,7 @@ exports.verifyEmail = async (req, res) => {
     { new: true }
   );
   sendMail(otp, user.email, VerifiefSuccessEmailTemplate, "Welcome Email")
-  res.json({ success: true, message: 'Email verified successfully', user})
+  res.json({ success: true, message: 'Email verified successfully', user })
 }
 
 
@@ -209,8 +209,8 @@ exports.UnFollowUser = async (req, res) => {
 
 exports.TrendingPodcasts = async (req, res) => {
   try {
-    const trendings = await User.find({}, { _id: 1, fullname: 2, avatar:3 }).sort({ followers: -1 });
-    return res.json({ success: true, trendings  })
+    const trendings = await User.find({}, { _id: 1, fullname: 2, avatar: 3 }).sort({ followers: -1 });
+    return res.json({ success: true, trendings })
   } catch (error) {
     return sendError(res, "Something went wrong!")
   }
@@ -228,10 +228,10 @@ exports.uploadPodcast = async (req, res) => {
     return sendErrorRemoveFile(res, "Please choose video")
   }
   let videoArray = []
-  videos.map(video => videoArray.push(`http://207.180.232.109:8003/uploads/${video.filename}`))
+  videos.map(video => videoArray.push(`/uploads/${video.filename}`))
   const podcast = {
     description: description,
-    image: `http://207.180.232.109:8003/uploads/${image.filename}`,
+    image: `/uploads/${image.filename}`,
     videos: videoArray,
     category: category
   }
@@ -248,14 +248,14 @@ exports.AddCatgories = async (req, res) => {
 
   try {
     await User.findByIdAndUpdate(
-      { _id: id},
+      { _id: id },
       {
         $set: {
           'categories': categories, // Update the nested property
         },
       },
     );
-    return res.json({ success: true, message: 'Categories added successfully'})
+    return res.json({ success: true, message: 'Categories added successfully' })
   } catch (error) {
     return sendError(res, "Something went wrong!")
   }
@@ -270,7 +270,7 @@ exports.updatePodcastVideos = async (req, res) => {
   }
   const user = await User.findById(userid)
   const filenameArray = []
-  videos.map((video) => filenameArray.push(`http://207.180.232.109:8003/uploads/${video.filename}`))
+  videos.map((video) => filenameArray.push(`/uploads/${video.filename}`))
   const podcastOldVideosArray = user.podcast.videos
   const AllVideos = filenameArray.concat(podcastOldVideosArray)
   const userData = await User.findByIdAndUpdate(
@@ -308,7 +308,7 @@ exports.updatePodcastImage = async (req, res) => {
   const avatar = req.file;
   const { oldimage, userid } = req.body
   const ext = avatar.originalname.substr(avatar.originalname.lastIndexOf('.'));
-  const filename = `http://207.180.232.109:8003/uploads/${avatar.originalname.replace(/\s/g, '')}-${req.query.randomId}${ext}`
+  const filename = `/uploads/${avatar.originalname.replace(/\s/g, '')}-${req.query.randomId}${ext}`
   removeDataFromUploads(oldimage)
   await User.findByIdAndUpdate(
     { _id: userid },
@@ -355,7 +355,7 @@ exports.updateProfileImage = async (req, res) => {
   const { oldimage, userid } = req.body
   console.log(avatar, 'hel 9999')
   const ext = avatar.originalname.substr(avatar.originalname.lastIndexOf('.'));
-  const filename = `http://207.180.232.109:8003/uploads/${avatar.originalname.replace(/\s/g, '')}-${req.query.randomId}${ext}`
+  const filename = `/uploads/${avatar.originalname.replace(/\s/g, '')}-${req.query.randomId}${ext}`
   removeDataFromUploads(oldimage)
   const user = await User.findByIdAndUpdate(
     { _id: userid },
@@ -388,10 +388,23 @@ exports.updateProfileFullname = async (req, res) => {
 // shorts controllers start
 
 exports.GetAllShortVideos = async (req, res) => {
-  Shorts.findOne({}, function (err, result) {
-    if (err) throw err;
-    return res.json({ success: true, shorts: result.shorts })
-  })
+  Shorts.countDocuments({}, (err, count) => {
+    if (err) {
+      console.error('Error counting documents:', err);
+    } else {
+      if (count === 0) {
+        return res.json({ success: false, shorts: [] })
+
+      } else {
+        Shorts.findOne({}, function (err, result) {
+          if (err) throw err;
+          return res.json({ success: true, shorts: result.shorts })
+        })
+      }
+    }
+  });
+
+
 }
 
 
@@ -402,10 +415,10 @@ exports.uploadShortVideos = async (req, res) => {
     userid,
     caption,
     category,
-    video: `http://207.180.232.109:8003/uploads/${video.filename}`,
-    createdAt:Date.now()
+    video: `/uploads/${video.filename}`,
+    createdAt: Date.now()
   };
-  const count =  await Shorts.countDocuments()
+  const count = await Shorts.countDocuments()
   if (count === 0) {
     const result = await Shorts.updateOne(
       { /* Your query to identify the document to update */ },
@@ -430,7 +443,7 @@ exports.uploadShortVideos = async (req, res) => {
 
   }
 
- 
+
 }
 
 exports.updateShortVCategory = async (req, res) => {

@@ -1,7 +1,9 @@
 const mongoose = require('mongoose');
 
 const shortsSchema = new mongoose.Schema({
-    shorts:[],
+    shorts: {
+      type:Array
+    },
     createdAt: {
         type: Date,
         default: Date.now
